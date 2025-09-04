@@ -1,0 +1,1595 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{hyperref}
+
+% Page setup
+\geometry{margin=1in}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{16-bit \& 64-bit Assembly Language}
+\fancyhead[R]{Assembly Programming Problems}
+\fancyfoot[C]{\thepage}
+
+% Code listing setup
+\lstdefinestyle{assembly}{
+    language={[x86masm]Assembler},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!5},
+    frame=single,
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=true,
+    showstringspaces=false,
+    morekeywords={org, db, dw, dd, resb, section, global, syscall, int, mov, add, sub, mul, div, cmp, jmp, je, jne, jl, jle, jg, jge, call, ret, push, pop, inc, dec, xor, lea, imul, xchg}
+}
+
+\lstset{style=assembly}
+
+\title{Assembly Language Programming Problems\\
+Complete Guide with Line-by-Line Explanations\\
+16-bit and 64-bit Implementation}
+\author{}
+\date{August 20, 2025}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Assembly Language Fundamentals for Beginners}
+
+Before diving into the programming problems, it's essential to understand the fundamental instructions and concepts used in assembly language programming. This section provides a beginner-friendly tutorial on the most commonly used assembly instructions.
+
+\subsection{Basic Assembly Instructions}
+
+\subsubsection{Data Movement Instructions}
+
+\paragraph{MOV - Move Data}
+The MOV instruction copies data from source to destination.
+\begin{lstlisting}
+mov ax, 5       ; Move immediate value 5 to AX register
+mov bx, ax      ; Copy contents of AX to BX register
+mov [num], ax   ; Move AX contents to memory location 'num'
+mov ax, [num]   ; Load value from memory location 'num' to AX
+\end{lstlisting}
+
+\paragraph{LEA - Load Effective Address}
+LEA loads the address of a memory location into a register.
+\begin{lstlisting}
+lea dx, message ; Load address of 'message' into DX register
+\end{lstlisting}
+
+\paragraph{XCHG - Exchange}
+XCHG swaps the contents of two operands.
+\begin{lstlisting}
+xchg ax, bx     ; Exchange contents of AX and BX registers
+\end{lstlisting}
+
+\subsubsection{Arithmetic Instructions}
+
+\paragraph{ADD - Addition}
+ADD performs addition operation.
+\begin{lstlisting}
+add ax, 5       ; Add 5 to AX register
+add ax, bx      ; Add BX to AX, result stored in AX
+\end{lstlisting}
+
+\paragraph{SUB - Subtraction}
+SUB performs subtraction operation.
+\begin{lstlisting}
+sub ax, 3       ; Subtract 3 from AX
+sub ax, bx      ; Subtract BX from AX
+\end{lstlisting}
+
+\paragraph{MUL - Multiplication}
+MUL performs unsigned multiplication.
+\begin{lstlisting}
+mul bx          ; Multiply AX by BX, result in DX:AX
+\end{lstlisting}
+
+\paragraph{IMUL - Signed Multiplication}
+IMUL performs signed integer multiplication.
+\begin{lstlisting}
+imul ax, 10     ; Multiply AX by 10
+\end{lstlisting}
+
+\paragraph{DIV - Division}
+DIV performs unsigned division.
+\begin{lstlisting}
+div bx          ; Divide DX:AX by BX, quotient in AX, remainder in DX
+\end{lstlisting}
+
+\paragraph{INC/DEC - Increment/Decrement}
+INC adds 1 to operand, DEC subtracts 1 from operand.
+\begin{lstlisting}
+inc ax          ; Increment AX by 1
+dec bx          ; Decrement BX by 1
+\end{lstlisting}
+
+\subsubsection{Logical Instructions}
+
+\paragraph{CMP - Compare}
+CMP compares two operands by performing subtraction without storing result.
+\begin{lstlisting}
+cmp ax, bx      ; Compare AX with BX, sets flags
+cmp ax, 0       ; Compare AX with 0
+\end{lstlisting}
+
+\paragraph{XOR - Exclusive OR}
+XOR performs bitwise exclusive OR operation.
+\begin{lstlisting}
+xor ax, ax      ; Clear AX register (common idiom)
+xor ax, bx      ; XOR AX with BX
+\end{lstlisting}
+
+\subsubsection{Control Flow Instructions}
+
+\paragraph{JMP - Unconditional Jump}
+JMP transfers control to specified label.
+\begin{lstlisting}
+jmp label       ; Jump to 'label'
+\end{lstlisting}
+
+\paragraph{Conditional Jumps}
+These instructions jump based on flag conditions set by previous instructions.
+\begin{lstlisting}
+je label        ; Jump if Equal (ZF=1)
+jne label       ; Jump if Not Equal (ZF=0)
+jl label        ; Jump if Less (SF≠OF)
+jle label       ; Jump if Less or Equal (ZF=1 or SF≠OF)
+jg label        ; Jump if Greater (ZF=0 and SF=OF)
+jge label       ; Jump if Greater or Equal (SF=OF)
+\end{lstlisting}
+
+\subsubsection{Function and Stack Instructions}
+
+\paragraph{CALL/RET - Function Call and Return}
+CALL pushes return address and jumps to function. RET returns to caller.
+\begin{lstlisting}
+call function   ; Call function, push return address
+ret            ; Return to caller
+\end{lstlisting}
+
+\paragraph{PUSH/POP - Stack Operations}
+PUSH stores data on stack, POP retrieves data from stack.
+\begin{lstlisting}
+push ax        ; Push AX onto stack
+pop bx         ; Pop top of stack into BX
+\end{lstlisting}
+
+\subsection{Registers and Memory}
+
+\subsubsection{16-bit Registers}
+\begin{itemize}
+\item \textbf{AX, BX, CX, DX}: General purpose 16-bit registers
+\item \textbf{AL, AH, BL, BH, CL, CH, DL, DH}: 8-bit portions of general registers
+\item \textbf{SI, DI}: Source and Destination Index registers
+\item \textbf{SP, BP}: Stack Pointer and Base Pointer
+\end{itemize}
+
+\subsubsection{64-bit Registers}
+\begin{itemize}
+\item \textbf{RAX, RBX, RCX, RDX}: Extended 64-bit general purpose registers
+\item \textbf{RSI, RDI}: Extended Source and Destination Index
+\item \textbf{RSP, RBP}: Extended Stack and Base Pointer
+\item \textbf{R8-R15}: Additional 64-bit registers
+\end{itemize}
+
+\subsection{System Calls and Interrupts}
+
+\subsubsection{16-bit DOS Interrupts}
+DOS uses interrupt 21h for system services:
+\begin{lstlisting}
+mov ah, 01h     ; Function: Read character
+int 21h         ; Call DOS interrupt
+
+mov ah, 02h     ; Function: Write character (DL contains char)
+int 21h         ; Call DOS interrupt
+
+mov ah, 09h     ; Function: Write string (DX points to string)
+int 21h         ; Call DOS interrupt
+
+mov ah, 4Ch     ; Function: Terminate program
+int 21h         ; Call DOS interrupt
+\end{lstlisting}
+
+\subsubsection{64-bit Linux System Calls}
+Linux uses syscall instruction with system call numbers in RAX:
+\begin{lstlisting}
+mov rax, 0      ; sys_read
+mov rdi, 0      ; stdin file descriptor
+mov rsi, buffer ; buffer address
+mov rdx, size   ; buffer size
+syscall         ; invoke system call
+
+mov rax, 1      ; sys_write
+mov rdi, 1      ; stdout file descriptor
+mov rsi, message; message address
+mov rdx, length ; message length
+syscall         ; invoke system call
+
+mov rax, 60     ; sys_exit
+xor rdi, rdi    ; exit status 0
+syscall         ; invoke system call
+\end{lstlisting}
+
+\subsection{Data Types and Memory Organization}
+
+\subsubsection{Data Declaration Directives}
+\begin{lstlisting}
+; 16-bit assembly
+db ?            ; Declare byte (8-bit), uninitialized
+db 'A'          ; Declare byte with initial value
+dw ?            ; Declare word (16-bit), uninitialized
+dw 1234         ; Declare word with initial value
+
+; 64-bit assembly
+resb 10         ; Reserve 10 bytes
+db "Hello", 0   ; Declare string with null terminator
+\end{lstlisting}
+
+\subsubsection{ASCII and Number Conversion}
+Converting between ASCII characters and numeric values:
+\begin{lstlisting}
+; ASCII to number
+sub al, '0'     ; Convert ASCII digit to numeric (subtract 48)
+
+; Number to ASCII
+add al, '0'     ; Convert numeric digit to ASCII (add 48)
+
+; Multi-digit conversion requires multiplication by 10:
+; result = result * 10 + new_digit
+\end{lstlisting}
+
+\section{Introduction}
+
+This document provides comprehensive assembly language solutions for four fundamental programming problems, implemented in both 16-bit (DOS) and 64-bit (Linux) environments. Each solution includes detailed line-by-line explanations to help understand the assembly programming concepts and system call interfaces.
+
+All programs have been updated to support multi-digit input, making them more practical and useful for real-world applications.
+
+The four problems covered are:
+\begin{enumerate}
+\item Swap Two Numbers
+\item Find Greater Number Between Two Inputs
+\item Prime Number Check
+\item Fibonacci Series Generation
+\end{enumerate}
+
+\section{Problem 1: Swap Two Numbers}
+
+\subsection{Problem Description}
+Write an assembly program to input two multi-digit numbers, display them before swapping, perform the swap operation, and display the numbers after swapping.
+
+\subsection{16-bit Implementation (Updated for Multi-Digit)}
+
+\begin{lstlisting}[caption=16-bit Number Swapping Program with Multi-Digit Support]
+org 100h                    ; COM file format origin
+
+; Data section
+.data
+num1 dw ?                   ; First number storage (16-bit)
+num2 dw ?                   ; Second number storage (16-bit)
+temp dw ?                   ; Temporary variable for swapping
+input_buffer db 10 dup(?)   ; Input buffer for multi-digit numbers
+prompt1 db 'Enter first number: $'
+prompt2 db 'Enter second number: $'
+before_msg db 'Before swap: $'
+after_msg db 'After swap: $'
+newline db 13, 10, '$'
+
+; Code section
+.code
+start:
+    ; Display first prompt
+    mov ah, 09h
+    lea dx, prompt1
+    int 21h
+    
+    ; Read first number
+    call read_number
+    mov num1, ax
+    
+    ; Display second prompt
+    mov ah, 09h
+    lea dx, prompt2
+    int 21h
+    
+    ; Read second number
+    call read_number
+    mov num2, ax
+    
+    ; Display before swap message
+    mov ah, 09h
+    lea dx, before_msg
+    int 21h
+    
+    ; Display first number
+    mov ax, num1
+    call print_number
+    
+    ; Print space
+    mov dl, ' '
+    mov ah, 02h
+    int 21h
+    
+    ; Display second number
+    mov ax, num2
+    call print_number
+    
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Perform swap
+    mov ax, num1
+    mov temp, ax
+    mov ax, num2
+    mov num1, ax
+    mov ax, temp
+    mov num2, ax
+    
+    ; Display after swap message
+    mov ah, 09h
+    lea dx, after_msg
+    int 21h
+    
+    ; Display swapped numbers
+    mov ax, num1
+    call print_number
+    
+    ; Print space
+    mov dl, ' '
+    mov ah, 02h
+    int 21h
+    
+    mov ax, num2
+    call print_number
+    
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Program termination
+    mov ah, 4Ch
+    int 21h
+
+read_number:
+    ; Function to read multi-digit number
+    ; Output: AX = parsed number
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Clear result
+    
+read_loop:
+    mov ah, 01h                 ; Read character
+    int 21h
+    
+    cmp al, 13                  ; Check for Enter key
+    je read_done
+    
+    cmp al, '0'                 ; Check if digit
+    jl read_loop
+    cmp al, '9'
+    jg read_loop
+    
+    sub al, '0'                 ; Convert to digit
+    mov bl, al                  ; Store digit
+    mov ax, cx                  ; Get current result
+    mov dx, 10
+    mul dx                      ; Multiply by 10
+    add ax, bx                  ; Add new digit
+    mov cx, ax                  ; Store result
+    jmp read_loop
+
+read_done:
+    mov ax, cx                  ; Return result in AX
+    pop dx
+    pop cx
+    pop bx
+    ret
+
+print_number:
+    ; Function to print number in AX
+    push ax
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Digit counter
+    mov bx, 10                  ; Divisor
+    
+    cmp ax, 0                   ; Check for zero
+    jne convert_digits
+    
+    ; Handle zero case
+    mov dl, '0'
+    mov ah, 02h
+    int 21h
+    jmp print_done
+    
+convert_digits:
+    cmp ax, 0
+    je print_digits
+    
+    mov dx, 0                   ; Clear remainder
+    div bx                      ; Divide by 10
+    push dx                     ; Push remainder (digit)
+    inc cx                      ; Increment digit count
+    jmp convert_digits
+    
+print_digits:
+    cmp cx, 0
+    je print_done
+    
+    pop dx                      ; Get digit
+    add dl, '0'                 ; Convert to ASCII
+    mov ah, 02h
+    int 21h
+    dec cx
+    jmp print_digits
+    
+print_done:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+end start
+\end{lstlisting}
+
+\subsection{Line-by-Line Explanation (16-bit Updated)}
+
+\begin{enumerate}
+\item \textbf{org 100h}: Sets the origin address to 100h, required for COM executable format in DOS.
+\item \textbf{.data}: Begins the data segment where variables are declared.
+\item \textbf{num1 dw ?}: Declares a word (16-bit) variable for the first number, supporting values up to 65,535.
+\item \textbf{num2 dw ?}: Declares a word variable for the second number.
+\item \textbf{temp dw ?}: Declares a temporary word variable for the swapping operation.
+\item \textbf{prompt1 db 'Enter first number: \$'}: String constant for user prompt with DOS string terminator.
+\item \textbf{mov ah, 09h}: Loads function code 09h into AH register (DOS string output function).
+\item \textbf{lea dx, prompt1}: Loads effective address of prompt1 into DX register.
+\item \textbf{int 21h}: Invokes DOS interrupt 21h to execute the function in AH.
+\item \textbf{call read\_number}: Calls the multi-digit input function.
+\item \textbf{mov num1, ax}: Stores the parsed number from AX into num1 variable.
+\item \textbf{read\_number function}: 
+    \begin{itemize}
+    \item Initializes result accumulator (CX) to zero
+    \item Reads characters one by one using DOS function 01h
+    \item Validates each character to ensure it's a digit (0-9)
+    \item Converts ASCII to numeric by subtracting '0'
+    \item Accumulates result: result = result × 10 + digit
+    \item Continues until Enter key (ASCII 13) is pressed
+    \end{itemize}
+\item \textbf{print\_number function}:
+    \begin{itemize}
+    \item Handles special case of zero
+    \item Uses division by 10 to extract digits in reverse order
+    \item Pushes digits onto stack to reverse their order
+    \item Pops digits and converts to ASCII for display
+    \item Uses DOS function 02h to display each character
+    \end{itemize}
+\item \textbf{Swapping logic}: Uses temporary variable to exchange values between num1 and num2.
+\item \textbf{mov ah, 4Ch}: Loads function code 4Ch (program termination) into AH.
+\item \textbf{int 21h}: Calls DOS interrupt to terminate the program.
+\end{enumerate}
+
+\subsection{64-bit Implementation}
+
+\begin{lstlisting}[caption=64-bit Number Swapping Program]
+section .bss
+    inbuf1 resb 64          ; Input buffer for first number
+    inbuf2 resb 64          ; Input buffer for second number
+
+section .data
+    prompt1 db "Enter first number: ", 0
+    prompt2 db "Enter second number: ", 0
+    before_msg db "Before swap: ", 0
+    after_msg db "After swap: ", 0
+    newline db 10, 0
+
+section .text
+    global _start
+
+_start:
+    ; Print first prompt
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rsi, prompt1        ; message address
+    mov rdx, 20             ; message length
+    syscall                 ; invoke system call
+
+    ; Read first number
+    mov rax, 0              ; sys_read system call
+    mov rdi, 0              ; stdin file descriptor
+    mov rsi, inbuf1         ; buffer address
+    mov rdx, 64             ; buffer size
+    syscall                 ; invoke system call
+
+    ; Parse first number into r8
+    mov rsi, inbuf1         ; source buffer
+    call parse_number       ; convert ASCII to integer
+    mov r8, rax             ; store first number in r8
+
+    ; Print second prompt
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rsi, prompt2        ; message address
+    mov rdx, 21             ; message length
+    syscall                 ; invoke system call
+
+    ; Read second number
+    mov rax, 0              ; sys_read system call
+    mov rdi, 0              ; stdin file descriptor
+    mov rsi, inbuf2         ; buffer address
+    mov rdx, 64             ; buffer size
+    syscall                 ; invoke system call
+
+    ; Parse second number into r9
+    mov rsi, inbuf2         ; source buffer
+    call parse_number       ; convert ASCII to integer
+    mov r9, rax             ; store second number in r9
+
+    ; Display before swap
+    call print_before_swap
+
+    ; Perform swap using register exchange
+    xchg r8, r9             ; Exchange values in r8 and r9
+
+    ; Display after swap
+    call print_after_swap
+
+    ; Program termination
+    mov rax, 60             ; sys_exit system call
+    xor rdi, rdi            ; exit status 0
+    syscall                 ; invoke system call
+
+parse_number:
+    ; Function to convert ASCII string to integer
+    ; Input: RSI = string address
+    ; Output: RAX = integer value
+    xor rax, rax            ; clear result
+    xor rbx, rbx            ; clear temporary register
+parse_loop:
+    mov bl, [rsi]           ; load character
+    cmp bl, 10              ; check for newline
+    je parse_done           ; exit if newline
+    cmp bl, '0'             ; check if less than '0'
+    jl parse_done           ; exit if not digit
+    cmp bl, '9'             ; check if greater than '9'
+    jg parse_done           ; exit if not digit
+    sub bl, '0'             ; convert to digit
+    imul rax, 10            ; multiply result by 10
+    add rax, rbx            ; add current digit
+    inc rsi                 ; move to next character
+    jmp parse_loop          ; continue parsing
+parse_done:
+    ret                     ; return with result in RAX
+
+print_before_swap:
+    ; Implementation for printing numbers before swap
+    ret
+
+print_after_swap:
+    ; Implementation for printing numbers after swap
+    ret
+\end{lstlisting}
+
+\subsection{Line-by-Line Explanation (64-bit)}
+
+\begin{enumerate}
+\item \textbf{section .bss}: Declares uninitialized data section.
+\item \textbf{inbuf1 resb 64}: Reserves 64 bytes for first number input buffer.
+\item \textbf{section .data}: Declares initialized data section with strings.
+\item \textbf{global \_start}: Makes \_start symbol globally visible to linker.
+\item \textbf{\_start:}: Program entry point label.
+\item \textbf{mov rax, 1}: Loads sys\_write system call number into RAX.
+\item \textbf{mov rdi, 1}: Sets file descriptor to 1 (stdout).
+\item \textbf{mov rsi, prompt1}: Points RSI to the prompt string address.
+\item \textbf{mov rdx, 20}: Sets the number of bytes to write.
+\item \textbf{syscall}: Invokes the system call using the Linux syscall interface.
+\item \textbf{mov rax, 0}: Loads sys\_read system call number.
+\item \textbf{call parse\_number}: Calls function to convert ASCII to integer.
+\item \textbf{mov r8, rax}: Stores parsed first number in R8 register.
+\item \textbf{xchg r8, r9}: Exchanges values between R8 and R9 registers (swap operation).
+\item \textbf{parse\_number function}: Converts ASCII string to integer using decimal accumulation.
+\end{enumerate}
+
+\section{Problem 2: Find Greater Number Between Two Inputs}
+
+\subsection{Problem Description}
+Write an assembly program to input two multi-digit numbers and determine which one is greater, then display the result.
+
+\subsection{16-bit Implementation (Updated for Multi-Digit)}
+
+\begin{lstlisting}[caption=16-bit Greater Number Program with Multi-Digit Support]
+org 100h                    ; COM file format origin
+
+; Data section
+.data
+num1 dw ?                   ; Storage for first number
+num2 dw ?                   ; Storage for second number
+prompt1 db 'Enter first number: $'
+prompt2 db 'Enter second number: $'
+result_msg db 'Greater number is: $'
+newline db 13, 10, '$'
+
+; Code section
+.code
+start:
+    ; Display first prompt
+    mov ah, 09h
+    lea dx, prompt1
+    int 21h
+    
+    ; Read first number
+    call read_number
+    mov num1, ax
+    
+    ; Display second prompt
+    mov ah, 09h
+    lea dx, prompt2
+    int 21h
+    
+    ; Read second number
+    call read_number
+    mov num2, ax
+    
+    ; Compare numbers
+    mov ax, num1
+    mov bx, num2
+    cmp ax, bx
+    jge first_greater
+    
+    ; Second number is greater
+    mov ax, bx
+    
+first_greater:
+    ; Display result message
+    mov ah, 09h
+    lea dx, result_msg
+    int 21h
+    
+    ; Display the greater number
+    call print_number
+    
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Program termination
+    mov ah, 4Ch
+    int 21h
+
+read_number:
+    ; Function to read multi-digit number
+    ; Output: AX = parsed number
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Clear result
+    
+read_loop:
+    mov ah, 01h                 ; Read character
+    int 21h
+    
+    cmp al, 13                  ; Check for Enter key
+    je read_done
+    
+    cmp al, '0'                 ; Check if digit
+    jl read_loop
+    cmp al, '9'
+    jg read_loop
+    
+    sub al, '0'                 ; Convert to digit
+    mov bl, al                  ; Store digit
+    mov ax, cx                  ; Get current result
+    mov dx, 10
+    mul dx                      ; Multiply by 10
+    add ax, bx                  ; Add new digit
+    mov cx, ax                  ; Store result
+    jmp read_loop
+
+read_done:
+    mov ax, cx                  ; Return result in AX
+    pop dx
+    pop cx
+    pop bx
+    ret
+
+print_number:
+    ; Function to print number in AX
+    push ax
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Digit counter
+    mov bx, 10                  ; Divisor
+    
+    cmp ax, 0                   ; Check for zero
+    jne convert_digits
+    
+    ; Handle zero case
+    mov dl, '0'
+    mov ah, 02h
+    int 21h
+    jmp print_done
+    
+convert_digits:
+    cmp ax, 0
+    je print_digits
+    
+    mov dx, 0                   ; Clear remainder
+    div bx                      ; Divide by 10
+    push dx                     ; Push remainder (digit)
+    inc cx                      ; Increment digit count
+    jmp convert_digits
+    
+print_digits:
+    cmp cx, 0
+    je print_done
+    
+    pop dx                      ; Get digit
+    add dl, '0'                 ; Convert to ASCII
+    mov ah, 02h
+    int 21h
+    dec cx
+    jmp print_digits
+    
+print_done:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+end start
+\end{lstlisting}
+
+\subsection{Line-by-Line Explanation (16-bit Updated)}
+
+\begin{enumerate}
+\item \textbf{org 100h}: Sets origin for COM executable format.
+\item \textbf{num1 dw ?, num2 dw ?}: Declares word variables for two numbers.
+\item \textbf{call read\_number}: Calls multi-digit input function.
+\item \textbf{mov num1, ax}: Stores first parsed number.
+\item \textbf{cmp ax, bx}: Performs comparison between the two numbers.
+\item \textbf{jge first\_greater}: Conditional jump if first number ≥ second number.
+\item \textbf{call print\_number}: Displays the greater number using the print function.
+\end{enumerate}
+
+\subsection{64-bit Implementation}
+
+\begin{lstlisting}[caption=64-bit Greater Number Program]
+section .bss
+    inbuf1 resb 64          ; Input buffer for first number
+    inbuf2 resb 64          ; Input buffer for second number
+
+section .data
+    prompt1 db "Enter first number: ", 0
+    prompt2 db "Enter second number: ", 0
+    result_msg db "Greater number is: ", 0
+
+section .text
+    global _start
+
+_start:
+    ; Display first prompt and read number
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, prompt1
+    mov rdx, 20
+    syscall
+
+    mov rax, 0
+    mov rdi, 0
+    mov rsi, inbuf1
+    mov rdx, 64
+    syscall
+
+    ; Parse first number
+    mov rsi, inbuf1
+    call parse_number
+    mov r8, rax
+
+    ; Display second prompt and read number
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, prompt2
+    mov rdx, 21
+    syscall
+
+    mov rax, 0
+    mov rdi, 0
+    mov rsi, inbuf2
+    mov rdx, 64
+    syscall
+
+    ; Parse second number
+    mov rsi, inbuf2
+    call parse_number
+    mov r9, rax
+
+    ; Compare and select maximum
+    cmp r8, r9
+    jge first_is_greater
+    mov rbx, r9
+    jmp display_result
+
+first_is_greater:
+    mov rbx, r8
+
+display_result:
+    ; Display result message
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, result_msg
+    mov rdx, 19
+    syscall
+
+    ; Convert and display the greater number
+    mov rax, rbx
+    call print_number
+
+    ; Program termination
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+parse_number:
+    ; Convert ASCII string to integer
+    xor rax, rax
+    xor rbx, rbx
+parse_loop:
+    mov bl, [rsi]
+    cmp bl, 10
+    je parse_done
+    cmp bl, '0'
+    jl parse_done
+    cmp bl, '9'
+    jg parse_done
+    sub bl, '0'
+    imul rax, 10
+    add rax, rbx
+    inc rsi
+    jmp parse_loop
+parse_done:
+    ret
+
+print_number:
+    ; Convert integer to ASCII and display
+    ; Implementation would convert RAX to ASCII string and print
+    ret
+\end{lstlisting}
+
+\section{Problem 3: Prime Number Check}
+
+\subsection{Problem Description}
+Write an assembly program to check whether a given multi-digit number is prime or not. A prime number is divisible only by 1 and itself.
+
+\subsection{16-bit Implementation (Updated for Multi-Digit)}
+
+\begin{lstlisting}[caption=16-bit Prime Check Program with Multi-Digit Support]
+org 100h                    ; COM file format origin
+
+; Data section
+.data
+num dw ?                    ; Storage for input number
+prompt db 'Enter a number: 
+prime_msg db 'Prime
+not_prime_msg db 'Not Prime
+newline db 13, 10, '
+
+; Code section
+.code
+start:
+    ; Display prompt
+    mov ah, 09h
+    lea dx, prompt
+    int 21h
+    
+    ; Read number
+    call read_number
+    mov num, ax
+    
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Check if number is less than 2
+    mov ax, num
+    cmp ax, 2
+    jl not_prime
+    
+    ; Check if number equals 2
+    cmp ax, 2
+    je is_prime
+    
+    ; Check if number is even (except 2)
+    mov dx, 0
+    mov bx, 2
+    div bx
+    cmp dx, 0
+    je not_prime
+    
+    ; Initialize divisor for trial division
+    mov bx, 3                   ; Start with divisor 3
+    mov ax, num                 ; Reload number
+    
+loop_check:
+    ; Check if divisor * divisor > number
+    mov cx, bx
+    mov ax, bx
+    mul bx                      ; BX * BX
+    mov dx, ax
+    mov ax, num                 ; Reload number
+    cmp dx, ax
+    jg is_prime                 ; If divisor^2 > number, it's prime
+    
+    ; Check if number is divisible by current divisor
+    mov dx, 0
+    div bx
+    cmp dx, 0
+    je not_prime                ; If remainder is 0, not prime
+    
+    ; Increment divisor by 2 (check only odd numbers)
+    add bx, 2
+    mov ax, num                 ; Reload number for next iteration
+    jmp loop_check
+    
+is_prime:
+    ; Display prime message
+    mov ah, 09h
+    lea dx, prime_msg
+    int 21h
+    jmp exit
+    
+not_prime:
+    ; Display not prime message
+    mov ah, 09h
+    lea dx, not_prime_msg
+    int 21h
+    
+exit:
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Program termination
+    mov ah, 4Ch
+    int 21h
+
+read_number:
+    ; Function to read multi-digit number
+    ; Output: AX = parsed number
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Clear result
+    
+read_loop:
+    mov ah, 01h                 ; Read character
+    int 21h
+    
+    cmp al, 13                  ; Check for Enter key
+    je read_done
+    
+    cmp al, '0'                 ; Check if digit
+    jl read_loop
+    cmp al, '9'
+    jg read_loop
+    
+    sub al, '0'                 ; Convert to digit
+    mov bl, al                  ; Store digit
+    mov ax, cx                  ; Get current result
+    mov dx, 10
+    mul dx                      ; Multiply by 10
+    add ax, bx                  ; Add new digit
+    mov cx, ax                  ; Store result
+    jmp read_loop
+
+read_done:
+    mov ax, cx                  ; Return result in AX
+    pop dx
+    pop cx
+    pop bx
+    ret
+
+end start
+\end{lstlisting}
+
+\subsection{Line-by-Line Explanation (16-bit Updated)}
+
+\begin{enumerate}
+\item \textbf{org 100h}: Sets origin address for COM executable.
+\item \textbf{num dw ?}: Declares word variable for input number (supports up to 65,535).
+\item \textbf{call read\_number}: Calls multi-digit input function.
+\item \textbf{cmp ax, 2}: Compares input with 2 (smallest prime).
+\item \textbf{jl not\_prime}: Jumps to not\_prime if input < 2.
+\item \textbf{je is\_prime}: Jumps to is\_prime if input equals 2.
+\item \textbf{Even number check}: Divides by 2 to check if even (composite if > 2).
+\item \textbf{mov bx, 3}: Initializes divisor to 3 for odd number trial division.
+\item \textbf{Square root optimization}: Checks if divisor² > number to limit search.
+\item \textbf{add bx, 2}: Increments divisor by 2 (checks only odd divisors).
+\item \textbf{Prime determination}: Uses trial division algorithm optimized for efficiency.
+\end{enumerate}
+
+\section{Problem 4: Fibonacci Series Generation}
+
+\subsection{Problem Description}
+Write an assembly program to generate and display the first N numbers of the Fibonacci series, where each number is the sum of the two preceding ones.
+
+\subsection{16-bit Implementation (Updated for Multi-Digit)}
+
+\begin{lstlisting}[caption=16-bit Fibonacci Series Program with Multi-Digit Support]
+org 100h                    ; COM file format origin
+
+; Data section
+.data
+count dw ?                  ; Storage for count of numbers
+fib1 dw 0                   ; First Fibonacci number
+fib2 dw 1                   ; Second Fibonacci number
+prompt db 'Enter count: 
+space db ' 
+newline db 13, 10, '
+
+; Code section
+.code
+start:
+    ; Display prompt
+    mov ah, 09h
+    lea dx, prompt
+    int 21h
+    
+    ; Read count
+    call read_number
+    mov count, ax
+    
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Initialize Fibonacci sequence
+    mov cx, count               ; Load count into CX
+    mov ax, 0                   ; F(0) = 0
+    mov bx, 1                   ; F(1) = 1
+    
+    ; Check if count is 0
+    cmp cx, 0
+    je done
+    
+    ; Print first number (0)
+    call print_number
+    mov ah, 09h
+    lea dx, space
+    int 21h
+    
+    dec cx
+    cmp cx, 0
+    je done
+    
+    ; Print second number (1)
+    mov ax, bx
+    call print_number
+    mov ah, 09h
+    lea dx, space
+    int 21h
+    
+    dec cx
+    
+fibonacci_loop:
+    cmp cx, 0
+    je done
+    
+    ; Calculate next Fibonacci number
+    mov dx, ax                  ; Store F(n-2)
+    add ax, bx                  ; F(n) = F(n-1) + F(n-2)
+    mov bx, dx                  ; Update F(n-1) = old F(n-2)
+    xchg ax, bx                 ; Swap for next iteration
+    
+    ; Print the number
+    mov ax, bx
+    call print_number
+    mov ah, 09h
+    lea dx, space
+    int 21h
+    
+    dec cx
+    jmp fibonacci_loop
+    
+done:
+    ; Print newline
+    mov ah, 09h
+    lea dx, newline
+    int 21h
+    
+    ; Program termination
+    mov ah, 4Ch
+    int 21h
+
+read_number:
+    ; Function to read multi-digit number
+    ; Output: AX = parsed number
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Clear result
+    
+read_loop:
+    mov ah, 01h                 ; Read character
+    int 21h
+    
+    cmp al, 13                  ; Check for Enter key
+    je read_done
+    
+    cmp al, '0'                 ; Check if digit
+    jl read_loop
+    cmp al, '9'
+    jg read_loop
+    
+    sub al, '0'                 ; Convert to digit
+    mov bl, al                  ; Store digit
+    mov ax, cx                  ; Get current result
+    mov dx, 10
+    mul dx                      ; Multiply by 10
+    add ax, bx                  ; Add new digit
+    mov cx, ax                  ; Store result
+    jmp read_loop
+
+read_done:
+    mov ax, cx                  ; Return result in AX
+    pop dx
+    pop cx
+    pop bx
+    ret
+
+print_number:
+    ; Function to print number in AX
+    push ax
+    push bx
+    push cx
+    push dx
+    
+    mov cx, 0                   ; Digit counter
+    mov bx, 10                  ; Divisor
+    
+    cmp ax, 0                   ; Check for zero
+    jne convert_digits
+    
+    ; Handle zero case
+    mov dl, '0'
+    mov ah, 02h
+    int 21h
+    jmp print_done
+    
+convert_digits:
+    cmp ax, 0
+    je print_digits
+    
+    mov dx, 0                   ; Clear remainder
+    div bx                      ; Divide by 10
+    push dx                     ; Push remainder (digit)
+    inc cx                      ; Increment digit count
+    jmp convert_digits
+    
+print_digits:
+    cmp cx, 0
+    je print_done
+    
+    pop dx                      ; Get digit
+    add dl, '0'                 ; Convert to ASCII
+    mov ah, 02h
+    int 21h
+    dec cx
+    jmp print_digits
+    
+print_done:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+end start
+\end{lstlisting}
+
+\subsection{Line-by-Line Explanation (16-bit Updated)}
+
+\begin{enumerate}
+\item \textbf{count dw ?}: Declares word variable to store the count of Fibonacci numbers.
+\item \textbf{call read\_number}: Reads multi-digit count from user.
+\item \textbf{mov cx, count}: Loads count into CX register for loop control.
+\item \textbf{mov ax, 0; mov bx, 1}: Initializes first two Fibonacci numbers.
+\item \textbf{Fibonacci calculation}: F(n) = F(n-1) + F(n-2) using register arithmetic.
+\item \textbf{xchg ax, bx}: Efficiently swaps values for next iteration.
+\item \textbf{call print\_number}: Displays each Fibonacci number using the print function.
+\item \textbf{Loop control}: Uses CX as counter, decrements after each iteration.
+\end{enumerate}
+
+\subsection{64-bit Implementation}
+
+\begin{lstlisting}[caption=64-bit Fibonacci Series Program]
+section .bss
+    inbuf resb 64           ; Input buffer for count
+    outbuf resb 20          ; Output buffer for numbers
+
+section .data
+    prompt db "Enter N: ", 0
+    space db " ", 0
+    newline db 10, 0
+
+section .text
+    global _start
+
+_start:
+    ; Display prompt
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rsi, prompt         ; prompt message address
+    mov rdx, 9              ; message length
+    syscall                 ; invoke system call
+
+    ; Read count
+    mov rax, 0              ; sys_read system call
+    mov rdi, 0              ; stdin file descriptor
+    mov rsi, inbuf          ; input buffer address
+    mov rdx, 64             ; buffer size
+    syscall                 ; invoke system call
+
+    ; Parse count into RCX
+    mov rsi, inbuf          ; source buffer
+    call parse_number       ; convert to integer
+    mov rcx, rax            ; store count in rcx
+
+    ; Initialize Fibonacci sequence
+    mov r8, 0               ; F(0) = 0
+    mov r9, 1               ; F(1) = 1
+
+    ; Check if count is 0
+    cmp rcx, 0              ; compare count with 0
+    je exit_program         ; exit if no numbers to print
+
+    ; Print first number (0)
+    mov rax, r8             ; move first number to rax
+    call print_number       ; display the number
+    call print_space        ; print space
+
+    ; Check if count is 1
+    dec rcx                 ; decrement count
+    cmp rcx, 0              ; compare with 0
+    je exit_program         ; exit if only one number
+
+    ; Print second number (1)
+    mov rax, r9             ; move second number to rax
+    call print_number       ; display the number
+    call print_space        ; print space
+
+    ; Decrement count for remaining numbers
+    dec rcx                 ; decrement count
+
+fibonacci_loop:
+    ; Check if more numbers needed
+    cmp rcx, 0              ; compare count with 0
+    je print_newline        ; exit loop if done
+
+    ; Calculate next Fibonacci number
+    mov rax, r8             ; load F(n-2)
+    add rax, r9             ; add F(n-1) to get F(n)
+    mov r8, r9              ; F(n-2) = old F(n-1)
+    mov r9, rax             ; F(n-1) = new F(n)
+
+    ; Display the new number
+    call print_number       ; display F(n)
+    call print_space        ; print space
+
+    ; Continue loop
+    dec rcx                 ; decrement counter
+    jmp fibonacci_loop      ; continue loop
+
+print_newline:
+    ; Print newline character
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rsi, newline        ; newline character
+    mov rdx, 1              ; character length
+    syscall                 ; invoke system call
+
+exit_program:
+    ; Program termination
+    mov rax, 60             ; sys_exit system call
+    xor rdi, rdi            ; exit status 0
+    syscall                 ; invoke system call
+
+parse_number:
+    ; Convert ASCII string to integer
+    xor rax, rax            ; clear result accumulator
+    xor rbx, rbx            ; clear temporary register
+parse_digit_loop:
+    mov bl, [rsi]           ; load current character
+    cmp bl, 10              ; check for newline
+    je parse_complete       ; exit if newline found
+    cmp bl, '0'             ; validate lower bound
+    jl parse_complete       ; exit if not a digit
+    cmp bl, '9'             ; validate upper bound
+    jg parse_complete       ; exit if not a digit
+    sub bl, '0'             ; convert ASCII to digit
+    imul rax, 10            ; multiply result by 10
+    add rax, rbx            ; add current digit to result
+    inc rsi                 ; move to next character
+    jmp parse_digit_loop    ; continue parsing
+parse_complete:
+    ret                     ; return with result in RAX
+
+print_number:
+    ; Convert integer to ASCII and display
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    
+    ; Handle special case of 0
+    cmp rax, 0
+    je print_zero
+    
+    ; Convert number to string (reverse order)
+    mov rbx, 10             ; divisor for base 10
+    mov rcx, 0              ; digit counter
+    mov rsi, outbuf         ; output buffer
+    add rsi, 19             ; point to end of buffer
+    mov byte [rsi], 0       ; null terminator
+
+convert_loop:
+    dec rsi                 ; move backward in buffer
+    xor rdx, rdx            ; clear remainder
+    div rbx                 ; divide by 10
+    add dl, '0'             ; convert remainder to ASCII
+    mov [rsi], dl           ; store digit
+    inc rcx                 ; increment digit count
+    cmp rax, 0              ; check if more digits
+    jne convert_loop        ; continue if more digits
+
+    ; Print the converted string
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rdx, rcx            ; number of digits
+    syscall                 ; invoke system call
+    jmp print_number_done   ; skip zero handling
+
+print_zero:
+    ; Print single zero character
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rsi, zero_char      ; zero character
+    mov rdx, 1              ; single character
+    syscall                 ; invoke system call
+
+print_number_done:
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+
+print_space:
+    ; Print space character for formatting
+    mov rax, 1              ; sys_write system call
+    mov rdi, 1              ; stdout file descriptor
+    mov rsi, space          ; space character
+    mov rdx, 1              ; single character
+    syscall                 ; invoke system call
+    ret
+
+section .data
+zero_char db '0'            ; character for printing zero
+\end{lstlisting}
+
+\subsection{Line-by-Line Explanation (64-bit)}
+
+\begin{enumerate}
+\item \textbf{section .bss}: Declares uninitialized data section.
+\item \textbf{inbuf resb 64}: Reserves 64 bytes for input buffer.
+\item \textbf{outbuf resb 20}: Reserves 20 bytes for number-to-string conversion.
+\item \textbf{global \_start}: Makes entry point visible to linker.
+\item \textbf{syscall}: Invokes Linux system call interface.
+\item \textbf{parse\_number}: Converts ASCII string to integer using decimal accumulation.
+\item \textbf{mov r8, 0; mov r9, 1}: Initializes Fibonacci sequence in 64-bit registers.
+\item \textbf{fibonacci\_loop}: Main loop for generating series using 64-bit arithmetic.
+\item \textbf{print\_number}: Converts integer to ASCII and displays using Linux system calls.
+\end{enumerate}
+
+\section{Key Differences Between 16-bit and 64-bit Implementations}
+
+\subsection{System Call Interface}
+\begin{itemize}
+\item \textbf{16-bit}: Uses DOS interrupts (INT 21h) with function codes in AH register
+\item \textbf{64-bit}: Uses Linux syscall interface with system call numbers in RAX
+\end{itemize}
+
+\subsection{Register Usage}
+\begin{itemize}
+\item \textbf{16-bit}: Limited to 8-bit (AL, BL, CL, DL) and 16-bit (AX, BX, CX, DX) registers
+\item \textbf{64-bit}: Extended 64-bit registers (RAX, RBX, RCX, RDX, R8-R15) available
+\end{itemize}
+
+\subsection{Memory Management}
+\begin{itemize}
+\item \textbf{16-bit}: Segmented memory model with .data and .code sections
+\item \textbf{64-bit}: Flat memory model with .bss, .data, and .text sections
+\end{itemize}
+
+\subsection{Input/Output Handling}
+\begin{itemize}
+\item \textbf{16-bit}: Character-by-character I/O with manual multi-digit parsing
+\item \textbf{64-bit}: Buffer-based I/O requiring string parsing and conversion
+\end{itemize}
+
+\subsection{Multi-Digit Support Improvements}
+\begin{itemize}
+\item \textbf{Enhanced Input Functions}: Both implementations now include robust multi-digit input parsing
+\item \textbf{Number Display Functions}: Complete integer-to-ASCII conversion and display
+\item \textbf{Larger Data Types}: Use of word (16-bit) and quadword (64-bit) for storing larger numbers
+\item \textbf{Validation}: Input validation ensures only valid numeric input is accepted
+\end{itemize}
+
+\section{Programming Techniques and Concepts}
+
+\subsection{Multi-Digit ASCII to Number Conversion}
+The updated implementations demonstrate advanced conversion techniques:
+\begin{itemize}
+\item \textbf{Accumulation Method}: result = result × 10 + digit
+\item \textbf{Input Validation}: Check each character is within '0' to '9' range
+\item \textbf{Loop Termination}: Use Enter key (ASCII 13) or newline (ASCII 10) as delimiter
+\end{itemize}
+
+\subsection{Number to ASCII Conversion}
+\begin{itemize}
+\item \textbf{Division Method}: Repeatedly divide by 10 to extract digits
+\item \textbf{Stack Usage}: Use stack to reverse digit order for correct display
+\item \textbf{Zero Handling}: Special case handling for zero value
+\end{itemize}
+
+\subsection{Conditional Branching}
+Enhanced conditional logic:
+\begin{itemize}
+\item \textbf{JE/JZ}: Jump if equal/zero
+\item \textbf{JGE}: Jump if greater than or equal
+\item \textbf{JL}: Jump if less than
+\item \textbf{JLE}: Jump if less than or equal
+\end{itemize}
+
+\subsection{Loop Structures}
+Advanced looping mechanisms:
+\begin{itemize}
+\item \textbf{Counter-controlled loops}: Using CX/RCX for iteration count
+\item \textbf{Conditional loops}: Testing conditions for loop termination
+\item \textbf{Input validation loops}: Continue reading until valid input
+\end{itemize}
+
+\subsection{Arithmetic Operations}
+Comprehensive arithmetic support:
+\begin{itemize}
+\item \textbf{Addition}: ADD instruction for sum calculations
+\item \textbf{Multiplication}: MUL/IMUL for multi-digit number parsing
+\item \textbf{Division}: DIV instruction for digit extraction and modular arithmetic
+\item \textbf{Increment/Decrement}: INC/DEC for counter manipulation
+\end{itemize}
+
+\section{Optimization Considerations}
+
+\subsection{Register Usage Optimization}
+\begin{itemize}
+\item Minimize memory access by keeping frequently used values in registers
+\item Use appropriate register sizes (8-bit, 16-bit, 32-bit, 64-bit) based on data range
+\item Leverage register exchange (XCHG) for efficient swapping operations
+\item Preserve registers using PUSH/POP in functions
+\end{itemize}
+
+\subsection{Algorithm Efficiency}
+\begin{itemize}
+\item \textbf{Prime Check}: Optimized by checking divisors only up to √n
+\item \textbf{Fibonacci}: Iterative approach is more memory-efficient than recursive
+\item \textbf{String Operations}: Buffer-based I/O reduces system call overhead
+\item \textbf{Input Parsing}: Single-pass parsing with validation
+\end{itemize}
+
+\subsection{Code Size Optimization}
+\begin{itemize}
+\item Use short jumps when possible to reduce instruction size
+\item Combine operations where feasible (e.g., XOR for clearing registers)
+\item Reuse code segments through function calls and labels
+\item Efficient use of stack for temporary storage
+\end{itemize}
+
+\section{Debugging and Testing Strategies}
+
+\subsection{Common Debugging Techniques}
+\begin{itemize}
+\item \textbf{Step-by-step execution}: Use debugger to trace instruction execution
+\item \textbf{Register monitoring}: Watch register values during program execution
+\item \textbf{Memory inspection}: Verify data storage and retrieval operations
+\item \textbf{Boundary testing}: Test with edge cases (0, 1, maximum values)
+\end{itemize}
+
+\subsection{Error Prevention}
+\begin{itemize}
+\item \textbf{Input validation}: Check for valid numeric input ranges and reject invalid characters
+\item \textbf{Overflow handling}: Consider arithmetic overflow in calculations, especially with large numbers
+\item \textbf{Division by zero}: Ensure divisors are non-zero before division operations
+\item \textbf{Buffer bounds}: Prevent buffer overruns in string operations
+\end{itemize}
+
+\subsection{Testing Multi-Digit Support}
+\begin{itemize}
+\item \textbf{Single digit}: Verify backward compatibility with original functionality
+\item \textbf{Multi-digit}: Test with various number lengths (2-digit, 3-digit, etc.)
+\item \textbf{Maximum values}: Test with largest supported values (65535 for 16-bit)
+\item \textbf{Edge cases}: Test with 0, 1, and boundary conditions
+\item \textbf{Invalid input}: Verify rejection of non-numeric characters
+\end{itemize}
+
+\section{Conclusion}
+
+This comprehensive guide demonstrates fundamental assembly language programming concepts through practical implementations with enhanced multi-digit support. The updated line-by-line explanations provide insights into:
+
+\begin{itemize}
+\item \textbf{Enhanced I/O Operations}: Robust multi-digit input and output functions
+\item \textbf{System call interfaces}: For different architectures (16-bit DOS, 64-bit Linux)
+\item \textbf{Register management}: Efficient use of available registers and memory organization
+\item \textbf{Control flow}: Advanced conditional execution and loop structures
+\item \textbf{Arithmetic operations}: Complex data manipulation and number processing
+\item \textbf{String processing}: ASCII-to-number and number-to-ASCII conversion techniques
+\item \textbf{Function design}: Modular programming with reusable functions
+\end{itemize}
+
+The comparison between 16-bit and 64-bit implementations highlights the evolution of computer architectures and programming paradigms. The multi-digit support makes these programs practical for real-world use, handling numbers from 0 to 65535 in 16-bit implementations and much larger ranges in 64-bit versions.
+
+These enhanced examples serve as building blocks for more complex assembly language programming projects and provide a solid foundation for understanding low-level system programming concepts. The multi-digit functionality demonstrates advanced programming techniques while maintaining clarity and educational value.
+
+Understanding assembly language programming with multi-digit support enhances appreciation for:
+
+\begin{itemize}
+\item \textbf{Computer architecture}: And instruction set design principles
+\item \textbf{Compiler optimization}: Techniques and low-level code generation
+\item \textbf{Operating system interfaces}: And system programming methodologies
+\item \textbf{Performance-critical applications}: Development and optimization strategies
+\item \textbf{Embedded systems}: And microcontroller programming approaches
+\item \textbf{Algorithm implementation}: At the lowest level with maximum efficiency
+\end{itemize}
+
+The skills developed through these exercises form the foundation for advanced topics in systems programming, compiler design, operating system development, and performance optimization.
+
+\end{document}

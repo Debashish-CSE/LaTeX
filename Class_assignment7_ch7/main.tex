@@ -1,0 +1,254 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tikz}
+\usepackage{enumerate}
+\usetikzlibrary{positioning,shapes,arrows}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+\usepackage{tcolorbox}
+
+% Define question box style
+\newtcolorbox{questionbox}{
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    fonttitle=\bfseries,
+    title=Question,
+    sharp corners,
+    boxrule=1pt,
+    left=8pt,
+    right=8pt,
+    top=8pt,
+    bottom=8pt
+}
+
+% SQL syntax highlighting
+\lstdefinestyle{sqlstyle}{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=2,
+    showspaces=false,
+    showstringspaces=false,
+    frame=single,
+    rulecolor=\color{gray!30},
+    backgroundcolor=\color{gray!5}
+}
+
+\lstset{style=sqlstyle}
+
+% Page setup
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{CSE 414 - Assignment 7}
+\lhead{Database Systems}
+\cfoot{\thepage}
+
+% Title formatting
+\titleformat{\section}{\Large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries}{}{0em}{}
+
+\begin{document}
+
+% Title Page
+\begin{titlepage}
+    \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.2\textwidth]{cu.png}
+    \end{figure}
+    \centering
+    \vspace*{0.5cm}
+    {\Huge\bfseries University of Chittagong}\\[0.5cm]
+    {\Large Department of Computer Science \& Engineering}\\[0.5cm]
+    {\large Database Systems Lab}\\[2cm]
+    
+    {\large Name of the assignment:}\\[0.3cm]
+    {\LARGE\bfseries Assignment 7: Chapter 7 Exercise\\[0.5cm]}
+    {\large CSE 414}\\[0.5cm]
+    {\large Database Systems}\\[3.5cm]
+    
+    \begin{minipage}[t]{0.4\textwidth}
+    \raggedleft
+    Submitted By:\\
+    \large \textbf{Debashish Chakraborty}\\
+    \large ID: 23701034
+    \end{minipage}
+    \hspace{0.05\textwidth}
+    \vrule width 1pt
+    \hspace{0.05\textwidth}
+    \begin{minipage}[t]{0.4\textwidth}
+    Submitted To:\\
+    \large \textbf{Dr. Rudra Pratap Deb Nath}\\
+    \large Associate Professor
+    \end{minipage}
+    
+    \vfill
+    {\large July 6, 2025}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\newpage 
+
+\section{Problem 7.8: Algorithm Efficiency Analysis}
+
+\begin{questionbox}
+\textbf{7.8:} Consider the algorithm in Figure 7.18 to compute $\alpha^+$. Show that this algorithm is more efficient than the one presented in Figure 7.8 (Section 7.4.2) and that it computes $\alpha^+$ correctly.
+\end{questionbox}
+
+\textbf{Solution:}
+
+\subsection{Correctness Proof}
+
+The algorithm is correct because:
+
+\begin{itemize}
+    \item If $A$ is added to result then there is a proof that $\alpha \rightarrow A$. To see this, observe that $\alpha \rightarrow \alpha$ trivially, so $\alpha$ is correctly part of result. If $A \notin \alpha$ is added to result, there must be some FD $\beta \rightarrow \gamma$ such that $A \in \gamma$ and $\beta$ is already a subset of result. (Otherwise fdcount would be nonzero and the if condition would be false.) A full proof can be given by induction on the depth of recursion for an execution of addin, but such a proof can be expected only from students with a good mathematical background.
+    
+    \item If $A \in \alpha^+$, then $A$ is eventually added to result. We prove this by induction on the length of the proof of $\alpha \rightarrow A$ using Armstrong's axioms. First observe that if procedure addin is called with some argument $\beta$, all the attributes in $\beta$ will be added to result. Also if a particular FD's fdcount becomes 0, all the attributes in its tail will definitely be added to result. The base case of the proof, $A \in \alpha \Rightarrow A \in \alpha^+$, is obviously true because the first call to addin has the argument $\alpha$. The inductive hypothesis is that if $\alpha \rightarrow A$ can be proved in $n$ steps or less, then $A \in$ result. If there is a proof in $n + 1$ steps that $\alpha \rightarrow A$, then the last step was an application of either reflexivity, augmentation, or transitivity on a fact $\alpha \rightarrow \beta$ provided in $n$ or fewer steps. If reflexivity or augmentation was used in the $(n + 1)^{st}$ step, $A$ must have been in result by the end of the $n^{th}$ step itself. Otherwise, by the inductive hypothesis, $\beta \subseteq$ result. Therefore, the dependency used in proving $\beta \rightarrow \gamma$, $A \in \gamma$, will have fdcount set to 0 by the end of the $n^{th}$ step. Hence $A$ will be added to result.
+\end{itemize}
+
+\subsection{Efficiency Analysis}
+
+To see that this algorithm is more efficient than the one presented in the chapter, note that we scan each FD once in the main program. The resulting array appears has size proportional to the size of the given FDs. The recursive calls to addin result in processing linear in the size of appears. Hence the algorithm has time complexity which is linear in the size of the given FDs.
+
+On the other hand, the algorithm given in the text has quadratic time complexity, as it may perform the loop as many times as the number of FDs, in each loop scanning all of them once.
+
+\textbf{Complexity Comparison:}
+\begin{align}
+\text{Figure 7.18 Algorithm:} &\quad O(|F|) \\
+\text{Figure 7.8 Algorithm:} &\quad O(|F|^2)
+\end{align}
+
+where $|F|$ represents the size of the given functional dependencies.
+
+\section{Problem 7.26: Functional Dependency Rule Soundness}
+
+\begin{questionbox}
+\textbf{7.26:} Consider the following proposed rule for functional dependencies: If $\alpha \rightarrow \beta$ and $\gamma \rightarrow \beta$, then $\alpha \rightarrow \gamma$. Prove that this rule is not sound by showing a relation $r$ that satisfies $\alpha \rightarrow \beta$ and $\gamma \rightarrow \beta$, but does not satisfy $\alpha \rightarrow \gamma$.
+\end{questionbox}
+
+\textbf{Solution:}
+
+We can prove that this rule is not sound by providing a counterexample. Consider the following relation $r$:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+$\alpha$ & $\gamma$ & $\beta$ \\
+\hline
+1 & 6 & 7 \\
+2 & 3 & 5 \\
+2 & 4 & 5 \\
+\hline
+\end{tabular}
+\end{center}
+
+In this relation:
+\begin{itemize}
+    \item $\alpha \rightarrow \beta$ holds: Each value of $\alpha$ maps to a unique value of $\beta$
+    \begin{itemize}
+        \item $\alpha = 1$ maps to $\beta = 7$
+        \item $\alpha = 2$ maps to $\beta = 5$
+    \end{itemize}
+    
+    \item $\gamma \rightarrow \beta$ holds: Each value of $\gamma$ maps to a unique value of $\beta$
+    \begin{itemize}
+        \item $\gamma = 6$ maps to $\beta = 7$
+        \item $\gamma = 3$ maps to $\beta = 5$
+        \item $\gamma = 4$ maps to $\beta = 5$
+    \end{itemize}
+    
+    \item However, $\alpha \rightarrow \gamma$ does \textbf{not} hold: The value $\alpha = 2$ maps to two different values of $\gamma$ (both 3 and 4)
+\end{itemize}
+
+This counterexample proves that the proposed rule is not sound.
+
+\textbf{Mathematical Verification:}
+
+Let $R = \{\alpha, \gamma, \beta\}$ and $F = \{\alpha \rightarrow \beta, \gamma \rightarrow \beta\}$.
+
+The proposed rule states: $F \models \alpha \rightarrow \gamma$
+
+However, our counterexample relation $r$ shows that:
+$$r \models F \text{ but } r \not\models \alpha \rightarrow \gamma$$
+
+Therefore, $F \not\models \alpha \rightarrow \gamma$, proving the rule is unsound.
+
+\section{Problem 7.35: BCNF Decomposition and Lossless Property}
+
+\begin{questionbox}
+\textbf{7.35:} Although the BCNF algorithm ensures that the resulting decomposition is lossless, it is possible to have a schema and a decomposition that was not generated by the algorithm, that is in BCNF, and is not lossless. Give an example of such a schema and its decomposition.
+\end{questionbox}
+
+\textbf{Solution:}
+
+Take the schema $R = (A, B, C, D, E)$ given on Practice Exercise 1. Assume the following set $F$ of functional dependencies holds:
+
+$$F := \{A \rightarrow BC, CD \rightarrow E, B \rightarrow D, E \rightarrow A\}$$
+
+Take the decomposition of $R$ given on Exercise 7.29:
+\begin{align}
+R_1 &= (A, B, C) \\
+R_2 &= (C, D, E)
+\end{align}
+
+\subsection{BCNF Verification}
+
+\textbf{For $R_1 = (A, B, C)$:}
+
+Functional dependencies projected onto $R_1$:
+$$F_1 = \{A \rightarrow BC, A \rightarrow B, A \rightarrow C\}$$
+
+Since $A$ is a superkey for $R_1$ (as $A^+ = \{A, B, C\}$ within $R_1$), all functional dependencies have a superkey on the left side. Therefore, $R_1$ is in BCNF.
+
+\textbf{For $R_2 = (C, D, E)$:}
+
+Functional dependencies projected onto $R_2$:
+$$F_2 = \{CD \rightarrow E\}$$
+
+We need to check if $CD$ is a superkey for $R_2$:
+$$(CD)^+ = \{C, D, E\}$$
+
+Since $CD$ determines all attributes in $R_2$, it is a superkey. Therefore, $R_2$ is in BCNF.
+
+\subsection{Lossless Property Verification}
+
+To check if the decomposition is lossless, we use the general condition:
+$$R_1 \cap R_2 \rightarrow R_1 \text{ or } R_1 \cap R_2 \rightarrow R_2$$
+
+We have:
+$$R_1 \cap R_2 = \{A, B, C\} \cap \{C, D, E\} = \{C\}$$
+
+Now we check:
+\begin{itemize}
+    \item Does $C \rightarrow R_1 = \{A, B, C\}$? 
+    
+    $C^+ = \{C\}$ (from the given functional dependencies)
+    
+    Since $C^+ \not\supseteq \{A, B, C\}$, this condition fails.
+    
+    \item Does $C \rightarrow R_2 = \{C, D, E\}$?
+    
+    Since $C^+ = \{C\}$ and $C^+ \not\supseteq \{C, D, E\}$, this condition also fails.
+\end{itemize}
+
+Since neither condition is satisfied, the decomposition is \textbf{lossy}.
+
+This example demonstrates that it is possible to have a BCNF decomposition that is not lossless, even though the BCNF algorithm itself guarantees lossless decomposition. The key insight is that not all BCNF decompositions are generated by the algorithm, and manually created BCNF decompositions may not preserve the lossless property.
+
+\end{document}
