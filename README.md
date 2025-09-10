@@ -150,7 +150,7 @@ LaTeX/
 
 ## 🎓 Learning Purpose
 
-This repository is curated as a **learning archive for \LaTeX{}**.  
+This repository is curated as a **learning archive for LaTeX**.  
 It showcases real-world examples of:
 - Report writing
 - Academic and technical documentation
@@ -158,7 +158,7 @@ It showcases real-world examples of:
 - Database and software engineering assignments
 - Document formatting best practices
 
-Use these resources to learn, reference or kickstart your own \LaTeX{} projects!
+Use these resources to learn, reference or kickstart your own LaTeX projects!
 
 ---
 
